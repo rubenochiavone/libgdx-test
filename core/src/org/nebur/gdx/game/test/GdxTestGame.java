@@ -6,6 +6,9 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -23,6 +26,9 @@ public class GdxTestGame extends ApplicationAdapter {
 	}
 
 	private OrthographicCamera camera;
+	private SpriteBatch spriteBatch;
+	private Texture driverCarTexture;
+	private Texture otherCarTexture;
 	private Car driverCar;
 	private Array<Car> cars;
 	private float speed;
@@ -32,14 +38,22 @@ public class GdxTestGame extends ApplicationAdapter {
 
 	@Override
 	public void create() {
-		// create the camera
+		// create the camera and the SpriteBatch
 		camera = new OrthographicCamera();
+		spriteBatch = new SpriteBatch();
+		spriteBatch.enableBlending();
+		spriteBatch.setBlendFunction(GL20.GL_SRC_ALPHA,
+				GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+		// init textures
+		driverCarTexture = new Texture(Gdx.files.internal("car.png"));
+		otherCarTexture = new Texture(Gdx.files.internal("car2.png"));
 
 		// set initial speed
 		speed = 150;
 
 		// configure driverCar position
-		driverCar = new Car(Lane.LEFT, Color.BLACK);
+		driverCar = new Car(Lane.LEFT, driverCarTexture);
 
 		// init cars
 		cars = new Array<Car>();
@@ -51,10 +65,10 @@ public class GdxTestGame extends ApplicationAdapter {
 		camera = new OrthographicCamera(2f * aspectRatio, 2f);
 		camera.rotate(new Vector3(1, 0, 0), 15.0f);
 
-		driverCar = new Car(driverCar.lane, driverCar.color);
+		driverCar = new Car(driverCar.lane, driverCarTexture);
 
 		for (Car car : cars) {
-			car.clone(new Car(car.lane, car.color));
+			car.clone(new Car(car.lane, otherCarTexture));
 		}
 	}
 
@@ -90,7 +104,7 @@ public class GdxTestGame extends ApplicationAdapter {
 
 		Lane lane = rightLane ? Lane.RIGHT : Lane.LEFT;
 
-		Car car = new Car(lane, Color.GRAY);
+		Car car = new Car(lane, otherCarTexture);
 		car.y = Gdx.graphics.getHeight() + Gdx.graphics.getHeight() / 5;
 
 		cars.add(car);
@@ -102,7 +116,7 @@ public class GdxTestGame extends ApplicationAdapter {
 		// arguments to glClearColor are the red, green
 		// blue and alpha component in the range [0,1]
 		// of the color to be used to clear the screen.
-		Gdx.gl.glClearColor(0, 0, 0.2f, 1);
+		Gdx.gl.glClearColor(0, 0.2f, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 	}
 
@@ -123,29 +137,41 @@ public class GdxTestGame extends ApplicationAdapter {
 	}
 
 	private void renderLanes() {
-		// draw main lane line
-		Gdx.gl.glLineWidth(2);
+		// draw lane
 		ShapeRenderer shapeRenderer = new ShapeRenderer();
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		shapeRenderer.setColor(Color.BLACK);
+		shapeRenderer.rect(Gdx.graphics.getWidth() / 4,
+				0,
+				Gdx.graphics.getWidth() / 2,
+				Gdx.graphics.getHeight());
+		shapeRenderer.end();
+
+		// draw main lane line
+		Gdx.gl.glLineWidth(4);
+		shapeRenderer = new ShapeRenderer();
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.setColor(Color.WHITE);
 		shapeRenderer.line(
 				new Vector2(Gdx.graphics.getWidth() / 2, 0),
 				new Vector2(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight()));
 		shapeRenderer.end();
 
 		// draw first secondary lane line
+		Gdx.gl.glLineWidth(2);
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-		shapeRenderer.setColor(Color.BLACK);
+		shapeRenderer.setColor(Color.WHITE);
 		shapeRenderer.line(
 				new Vector2(Gdx.graphics.getWidth() / 4, 0),
 				new Vector2(Gdx.graphics.getWidth() / 4, Gdx.graphics.getHeight()));
 		shapeRenderer.end();
 
 		// draw second secondary lane line
+		Gdx.gl.glLineWidth(2);
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-		shapeRenderer.setColor(Color.BLACK);
+		shapeRenderer.setColor(Color.WHITE);
 		shapeRenderer.line(
 				new Vector2(Gdx.graphics.getWidth() * 3 / 4, 0),
 				new Vector2(Gdx.graphics.getWidth() * 3 / 4, Gdx.graphics.getHeight()));
@@ -192,11 +218,11 @@ public class GdxTestGame extends ApplicationAdapter {
 	private class Car extends Rectangle {
 
 		public Lane lane;
-		public Color color;
+		public Texture texture;
 
-		public Car(Lane lane, Color color) {
+		public Car(Lane lane, Texture texture) {
 			this.lane = lane;
-			this.color = color;
+			this.texture = texture;
 			this.x = 0;
 			this.y = 20;
 			this.width = Gdx.graphics.getWidth() / 4 - 40;
@@ -220,20 +246,25 @@ public class GdxTestGame extends ApplicationAdapter {
 		public void render() {
 			updatePosition();
 
-			ShapeRenderer shapeRenderer = new ShapeRenderer();
-			shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-			shapeRenderer.setColor(this.color);
-			shapeRenderer.rect(
-					this.x,
-					this.y,
-					this.width,
-					this.height);
-			shapeRenderer.end();
+			spriteBatch.begin();
+			spriteBatch.draw(
+					new TextureRegion(
+							texture,
+							0.5f,
+							0.0f,
+							1.0f,
+							1.0f
+					),
+					x,
+					y,
+					width,
+					height);
+			spriteBatch.end();
 		}
 
 		public void clone(Car other) {
 			this.lane = other.lane;
-			this.color = other.color;
+			this.texture = other.texture;
 			this.x = other.x;
 			this.y = other.y;
 			this.width = other.width;
