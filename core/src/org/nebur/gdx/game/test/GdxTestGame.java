@@ -27,6 +27,7 @@ public class GdxTestGame extends ApplicationAdapter {
 
 	private OrthographicCamera camera;
 	private SpriteBatch spriteBatch;
+	private ShapeRenderer shapeRenderer;
 	private Texture driverCarTexture;
 	private Texture otherCarTexture;
 	private Car driverCar;
@@ -38,12 +39,13 @@ public class GdxTestGame extends ApplicationAdapter {
 
 	@Override
 	public void create() {
-		// create the camera and the SpriteBatch
+		// create the camera, the SpriteBatch and the ShapeRenderer
 		camera = new OrthographicCamera();
 		spriteBatch = new SpriteBatch();
 		spriteBatch.enableBlending();
 		spriteBatch.setBlendFunction(GL20.GL_SRC_ALPHA,
 				GL20.GL_ONE_MINUS_SRC_ALPHA);
+		shapeRenderer = new ShapeRenderer();
 
 		// init textures
 		driverCarTexture = new Texture(Gdx.files.internal("car.png"));
@@ -138,7 +140,6 @@ public class GdxTestGame extends ApplicationAdapter {
 
 	private void renderLanes() {
 		// draw lane
-		ShapeRenderer shapeRenderer = new ShapeRenderer();
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		shapeRenderer.setColor(Color.BLACK);
 		shapeRenderer.rect(Gdx.graphics.getWidth() / 4,
@@ -149,7 +150,6 @@ public class GdxTestGame extends ApplicationAdapter {
 
 		// draw main lane line
 		Gdx.gl.glLineWidth(4);
-		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 		shapeRenderer.setColor(Color.WHITE);
 		shapeRenderer.line(
@@ -159,7 +159,6 @@ public class GdxTestGame extends ApplicationAdapter {
 
 		// draw first secondary lane line
 		Gdx.gl.glLineWidth(2);
-		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 		shapeRenderer.setColor(Color.WHITE);
 		shapeRenderer.line(
@@ -169,7 +168,6 @@ public class GdxTestGame extends ApplicationAdapter {
 
 		// draw second secondary lane line
 		Gdx.gl.glLineWidth(2);
-		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 		shapeRenderer.setColor(Color.WHITE);
 		shapeRenderer.line(
@@ -213,6 +211,10 @@ public class GdxTestGame extends ApplicationAdapter {
 	@Override
 	public void dispose() {
 		// dispose of all allocated resources
+		spriteBatch.dispose();
+		shapeRenderer.dispose();
+		driverCarTexture.dispose();
+		otherCarTexture.dispose();																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																	
 	}
 
 	private class Car extends Rectangle {
